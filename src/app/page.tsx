@@ -1,95 +1,67 @@
-import Image from 'next/image'
-import styles from './page.module.css'
-
+"use client"
+import { useUploadThing } from "@/utils/uploadthing";
+import Link from "next/link";
+import { fileURLToPath } from "url";
+ 
+async function compress(file: File) {
+  // Run some compression algorithm on the file
+  return file;
+}
+ 
 export default function Home() {
+  const { startUpload } = useUploadThing("imageUploader", {
+    onUploadBegin: () => {
+      const uploadButton = document.getElementById("uploadButton") as HTMLElement;
+      uploadButton.className = "upload-button upload-uploading";
+      uploadButton.textContent = "Uploading...";
+    },
+    onClientUploadComplete: (res) => {
+      const uploadButton = document.getElementById("uploadButton") as HTMLElement;
+      uploadButton.className = "upload-button upload-success";
+      uploadButton.textContent = "Upload Success!";
+
+      const linkElement = document.getElementById("imageURL") as HTMLAnchorElement;
+
+      const url = res?.[0]?.url;
+
+      console.log(url);
+
+      linkElement.href = url as string;
+      linkElement.textContent = url as string;
+
+      setTimeout(() => {
+        uploadButton.className = "upload-button";
+        uploadButton.textContent = "Upload";
+      }, 2000);
+
+    },
+  });
+ 
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.tsx</code>
-        </p>
+    <main className="page-wrapper">
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center"}}>
+        <input
+          id="fileInput"
+          type="file"
+          style={{ display: "none" }}
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+  
+            // Do something with the file before uploading
+            const compressed = await compress(file);
+  
+            // Then start the upload of the compressed file
+            await startUpload([compressed]);
+          }}
+        />
+        <label id="uploadButton" htmlFor="fileInput" className="upload-button">
+          Upload
+        </label>
         <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+          Image URL: <a href="" id="imageURL" target="_blank"></a>
         </div>
       </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
     </main>
-  )
+  );
 }
